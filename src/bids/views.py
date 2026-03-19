@@ -1,13 +1,14 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.exceptions import PermissionDenied
-from .models import Bid
-from .serializers import BidSerializer
-from .services import place_bid_service
 from rest_framework.exceptions import ValidationError as APIValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter , OrderingFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+from .models import Bid
+from .serializers import BidSerializer
+from .models import AuctionListing
+from .services import place_bid_service
 
 class ListCreateBid(ListCreateAPIView):
     serializer_class = BidSerializer
@@ -18,8 +19,8 @@ class ListCreateBid(ListCreateAPIView):
         'bid_time','bidder','amount','is_valid'
     ]
     search_fields = [
-            'auction__title', 'auction__description', 
-            'auction__seller__username', 'bidder__username'
+        'auction__title', 'auction__description', 
+        'auction__seller__username', 'bidder__username'
     ]
     ordering_fields = ['bid_time','auction__starting_price','auction__bid_increment' ,'amount']
 
@@ -35,17 +36,19 @@ class ListCreateBid(ListCreateAPIView):
             .select_related("bidder", "auction")
         )
     
-    def perform_create(self, serializer):
-        auction_obj = self.kwargs["auction_pk"]
-        bid_amount = serializer.validated_data.get('amount')
-        user = self.request.user
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        auction = AuctionListing.objects.get(pk=self.kwargs["auction_pk"])
+        context['auction'] = auction
+        return context
 
+    def perform_create(self, serializer):
         try:
-            bid_instance = place_bid_service(auction_obj.id, user, bid_amount)
-            serializer.instance = bid_instance
-            
+            serializer.save()
         except DjangoValidationError as e:
-            raise APIValidationError(detail=e.message_dict if hasattr(e, 'message_dict') else e.messages)
+            raise APIValidationError(
+                detail=e.message_dict if hasattr(e, 'message_dict') else e.messages
+            )
 
 
 class RetrieveBid(RetrieveAPIView):

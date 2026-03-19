@@ -9,14 +9,14 @@ class Bid(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     auction = models.ForeignKey(
-        'AuctionListing',
+        'auctions.AuctionListing',
         on_delete=models.CASCADE,
         related_name='bids'
     )
     bidder = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='bids'
+        related_name='bidder_bids'
     )
     amount = models.DecimalField(max_digits=12, decimal_places=2 , validators=[MinValueValidator(0.00)])
     bid_time = models.DateTimeField(auto_now_add=True)
@@ -29,7 +29,6 @@ class Bid(models.Model):
             models.Index(fields=['bidder']),
             models.Index(fields=['auction', '-amount']),    
         ]
-
 
     def clean(self):
         errors = {}

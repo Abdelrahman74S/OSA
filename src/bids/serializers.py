@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Bid
-
+from .services import place_bid_service
 
 class BidSerializer(serializers.ModelSerializer):
     bidder = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -18,11 +18,14 @@ class BidSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "bidder", "bid_time", "is_valid"]
 
     def validate(self, data):
-        auction = data.get('auction')
-        amount = data.get('amount')
-        request = self.context['request']
+        auction = data.get('auction') or self.context.get('auction')
+        if not auction:
+            raise serializers.ValidationError({"auction": "Auction not found."})
 
-        if auction.seller == request.user:
+        amount = data.get('amount')
+        user = self.context['request'].user
+
+        if auction.seller == user:
             raise serializers.ValidationError(
                 {"bidder": "The seller cannot bid on their own auction."}
             )
@@ -39,5 +42,11 @@ class BidSerializer(serializers.ModelSerializer):
             )
 
         return data
-
-
+    
+    def create(self, validated_data):
+        auction = validated_data.get('auction') or self.context['auction']
+        user = self.context['request'].user
+        amount = validated_data['amount']
+    
+        bid = place_bid_service(auction.id, user, amount)
+        return bid
