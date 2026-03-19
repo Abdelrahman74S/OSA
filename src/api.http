@@ -1,0 +1,283 @@
+### Variables
+@baseUrl = http://127.0.0.1:8000/api
+@accessToken =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzczMTU2NzkxLCJpYXQiOjE3NzMxNTMxOTEsImp0aSI6ImQ1OWI3Y2YzODk2YzRiNDJhZWQ0MTZmODgwZjlkMzU2IiwidXNlcl9pZCI6IjQ5N2U1ZmYzLTVjZDEtNDZiZi1iZjQyLWQzNWM5ZDFjM2ZhMSJ9.M7bs3FtdhzmNMkBa5mRb4n-fjOCuGxMp3guTr2dOa2w"
+@refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3MzIzOTU5MSwiaWF0IjoxNzczMTUzMTkxLCJqdGkiOiI4NzI4MDA2YWYxYWQ0OGRhOTBmODRlODkxMTJlNDdkZiIsInVzZXJfaWQiOiI0OTdlNWZmMy01Y2QxLTQ2YmYtYmY0Mi1kMzVjOWQxYzNmYTEifQ.ir7XZ0HJZMgOidFCimccLZ8rEYKy_Z5DuQ4PedQO1jY"
+
+
+### =============================
+### 1. Register
+### =============================
+POST {{baseUrl}}/auth/register/
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "testuser@example.com",
+  "password": "Test@1234",
+  "confirm_password": "Test@1234"
+}
+
+
+### =============================
+### 2. Login
+### =============================
+POST {{baseUrl}}/auth/login/
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "Test@1234"
+}
+
+
+### =============================
+### 3. Logout
+### =============================
+POST {{baseUrl}}/auth/logout/
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "refresh": "{{refreshToken}}"
+}
+
+------------------------------------
+
+@baseUrl = http://127.0.0.1:8000/auct
+@adminToken = Bearer <admin-token-here>
+@userToken = Bearer <user-token-here>
+@categorySlug = electronics
+@auctionId = 00000000-0000-0000-0000-000000000000
+@imageId = 00000000-0000-0000-0000-000000000001
+
+# ══════════════════════════════════════════
+# CATEGORIES
+# ══════════════════════════════════════════
+
+### ✅ GET all categories (public)
+GET {{baseUrl}}/categories/
+Content-Type: application/json
+
+###
+
+### ✅ GET single category by slug (public)
+GET {{baseUrl}}/categories/{{categorySlug}}/
+Content-Type: application/json
+
+###
+
+### ✅ POST create category (admin only)
+POST {{baseUrl}}/categories/
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+{
+  "name": "Electronics",
+  "description": "Electronic devices and accessories"
+}
+
+###
+
+### ✅ PATCH update category (admin only)
+PATCH {{baseUrl}}/categories/{{categorySlug}}/
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+{
+  "description": "Updated description"
+}
+
+###
+
+### ✅ DELETE category (admin only)
+DELETE {{baseUrl}}/categories/{{categorySlug}}/
+Authorization: {{adminToken}}
+
+###
+
+### ❌ POST category without auth (should return 403)
+POST {{baseUrl}}/categories/
+Content-Type: application/json
+
+{
+  "name": "Unauthorized Category"
+}
+
+###
+
+
+# ══════════════════════════════════════════
+# AUCTIONS
+# ══════════════════════════════════════════
+
+### ✅ GET all auctions (public)
+GET {{baseUrl}}/auctions/
+Content-Type: application/json
+
+###
+
+### ✅ GET auctions filtered by status
+GET {{baseUrl}}/auctions/?status=ACTIVE
+Content-Type: application/json
+
+###
+
+### ✅ GET auctions filtered by category
+GET {{baseUrl}}/auctions/?category=electronics
+Content-Type: application/json
+
+###
+
+### ✅ GET single auction (public)
+GET {{baseUrl}}/auctions/{{auctionId}}/
+Content-Type: application/json
+
+###
+
+### ✅ POST create auction (authenticated)
+POST {{baseUrl}}/auctions/
+Content-Type: application/json
+Authorization: {{userToken}}
+
+{
+  "title": "iPhone 15 Pro Max",
+  "description": "Brand new, sealed in box.",
+  "category": 1,
+  "starting_price": "500.00",
+  "bid_increment": "10.00",
+  "reserve_price": "800.00",
+  "start_time": "2026-03-15T10:00:00Z",
+  "end_time": "2026-03-20T10:00:00Z"
+}
+
+###
+
+### ❌ POST auction — end_time before start_time (should return 400)
+POST {{baseUrl}}/auctions/
+Content-Type: application/json
+Authorization: {{userToken}}
+
+{
+  "title": "Bad Auction",
+  "description": "Invalid timing.",
+  "category": 1,
+  "starting_price": "100.00",
+  "bid_increment": "5.00",
+  "start_time": "2026-03-20T10:00:00Z",
+  "end_time": "2026-03-15T10:00:00Z"
+}
+
+###
+
+### ❌ POST auction — negative price (should return 400)
+POST {{baseUrl}}/auctions/
+Content-Type: application/json
+Authorization: {{userToken}}
+
+{
+  "title": "Negative Price",
+  "description": "Invalid price.",
+  "category": 1,
+  "starting_price": "-50.00",
+  "bid_increment": "5.00",
+  "start_time": "2026-03-15T10:00:00Z",
+  "end_time": "2026-03-20T10:00:00Z"
+}
+
+###
+
+### ✅ PATCH update auction (seller only)
+PATCH {{baseUrl}}/auctions/{{auctionId}}/
+Content-Type: application/json
+Authorization: {{userToken}}
+
+{
+  "title": "iPhone 15 Pro Max — Updated"
+}
+
+###
+
+### ❌ PATCH auction by non-seller (should return 403)
+PATCH {{baseUrl}}/auctions/{{auctionId}}/
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+{
+  "title": "Hacked Title"
+}
+
+###
+
+### ✅ DELETE auction (seller or admin)
+DELETE {{baseUrl}}/auctions/{{auctionId}}/
+Authorization: {{userToken}}
+
+###
+
+
+# ══════════════════════════════════════════
+# AUCTION IMAGES
+# ══════════════════════════════════════════
+
+### ✅ GET all images for an auction (authenticated)
+GET {{baseUrl}}/auctions/{{auctionId}}/images/
+Authorization: {{userToken}}
+
+###
+
+### ✅ POST upload image (seller only) — multipart
+POST {{baseUrl}}/auctions/{{auctionId}}/images/
+Authorization: {{userToken}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="image"; filename="phone.jpg"
+Content-Type: image/jpeg
+
+< ./phone.jpg
+--boundary
+Content-Disposition: form-data; name="is_primary"
+
+true
+--boundary
+Content-Disposition: form-data; name="order"
+
+1
+--boundary--
+
+###
+
+### ✅ GET single image
+GET {{baseUrl}}/auctions/{{auctionId}}/images/{{imageId}}/
+Authorization: {{userToken}}
+
+###
+
+### ✅ PATCH update image order (seller only)
+PATCH {{baseUrl}}/auctions/{{auctionId}}/images/{{imageId}}/
+Content-Type: application/json
+Authorization: {{userToken}}
+
+{
+  "order": 2,
+  "is_primary": false
+}
+
+###
+
+### ❌ PATCH image by non-seller (should return 403)
+PATCH {{baseUrl}}/auctions/{{auctionId}}/images/{{imageId}}/
+Content-Type: application/json
+Authorization: {{adminToken}}
+
+{
+  "order": 99
+}
+
+###
+
+### ✅ DELETE image (seller only)
+DELETE {{baseUrl}}/auctions/{{auctionId}}/images/{{imageId}}/
+Authorization: {{userToken}}
+
+###
