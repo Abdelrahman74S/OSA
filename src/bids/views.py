@@ -8,7 +8,6 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Bid
 from .serializers import BidSerializer
 from .models import AuctionListing
-from .services import place_bid_service
 
 class ListCreateBid(ListCreateAPIView):
     serializer_class = BidSerializer

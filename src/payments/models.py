@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from django.core.exceptions import ValidationError
-
+import uuid
 
 class Transaction(models.Model):
     class Status(models.TextChoices):
@@ -16,6 +16,8 @@ class Transaction(models.Model):
         DISPUTED = 'DISPUTED', 'Disputed'
         COMPLETED = 'COMPLETED', 'Completed'
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
     auction = models.OneToOneField(
         AuctionListing,
         on_delete=models.CASCADE,
@@ -96,7 +98,6 @@ class Transaction(models.Model):
         self.paid_at = timezone.now()
         self.save()
     
-    
     def mark_as_shipped(self):
         if not self.can_transition(self.Status.SHIPPED):
             raise ValidationError("Invalid status transition")
@@ -104,7 +105,6 @@ class Transaction(models.Model):
         self.status = self.Status.SHIPPED
         self.shipped_at = timezone.now()
         self.save()
-    
     
     def mark_as_delivered(self):
         if not self.can_transition(self.Status.DELIVERED):
