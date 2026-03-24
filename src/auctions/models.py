@@ -79,6 +79,7 @@ class AuctionListing(models.Model):
 
     # Status & Results
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
+    
     winner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

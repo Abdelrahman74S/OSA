@@ -1,0 +1,41 @@
+### Variables
+@baseUrl = http://127.0.0.1:8000/api
+@accessToken =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc0MjYwMDc2LCJpYXQiOjE3NzQyNTY0NzYsImp0aSI6IjA5NTVjZjczODBiYjRmYjliOGY1NjRmZWI4YTM0MzY3IiwidXNlcl9pZCI6IjhkNTI5NWE1LTA0MjktNDA2Yy1hNmY0LTE0OGUyZDNmYzg0MSJ9.wzVKDR4YIA7T1VlBI-qJ41kLuGfdh4cZwLKhpmLzwv0"
+@refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NDM0Mjg3NiwiaWF0IjoxNzc0MjU2NDc2LCJqdGkiOiI5MjEwZjZmOGJhMzI0MjliYWYyZDM2NDIzZjc2NGJlYyIsInVzZXJfaWQiOiI4ZDUyOTVhNS0wNDI5LTQwNmMtYTZmNC0xNDhlMmQzZmM4NDEifQ.rFtMdMbsGujoTnBItzHUPzTV9V6XDfTP06ZckW6-ITQ"
+
+### =============================
+### 1. Register
+### =============================
+POST {{baseUrl}}/auth/register/
+Content-Type: application/json
+
+{
+  "username": "abdo",
+  "email": "bdalrhmnr927@gmail.com",
+  "password": "Test@1234",
+  "confirm_password": "Test@1234"
+}
+
+
+### =============================
+### 2. Login
+### =============================
+POST {{baseUrl}}/auth/login/
+Content-Type: application/json
+
+{
+  "username": "abdo",
+  "password": "Test@1234"
+}
+
+
+### =============================
+### 3. Logout
+### =============================
+POST {{baseUrl}}/auth/logout/
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "refresh": "{{refreshToken}}"
+}

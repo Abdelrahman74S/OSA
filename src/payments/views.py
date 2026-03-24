@@ -87,7 +87,6 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
     def confirm_delivery(self, request, pk=None):
         transaction = self.get_object()
 
-        # Only buyer can confirm delivery
         if request.user != transaction.buyer:
             return Response(
                 {"detail": "Only the buyer can confirm delivery."},

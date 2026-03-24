@@ -7,7 +7,7 @@ from .serializers import (
         CategorySerializer, WatchlistSerializer
 )
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser ,JSONParser
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -96,7 +96,7 @@ class RetrieveUpdateDestroyAuctionListing(RetrieveUpdateDestroyAPIView):
 class ListCreateAuctionImage(ListCreateAPIView):
     serializer_class = AuctionImageSerializer
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser , JSONParser]
 
     def perform_create(self, serializer):
         auction = get_object_or_404(AuctionListing, pk=self.kwargs["auction_pk"])
