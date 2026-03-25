@@ -12,3 +12,6 @@ def create_transaction_on_auction_end(sender, instance, created, **kwargs):
             seller=instance.seller,
             final_price=instance.current_price
         )
+        
+# @receiver(post_save, sender=AuctionListing)
+# def end_auction(sender, instance, created, **kwargs):

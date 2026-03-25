@@ -15,8 +15,13 @@ from rest_framework.generics import (
 )
 from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter , OrderingFilter
+from rest_framework.filters import SearchFilter , OrderingFilter 
 from .Permissions import IsSellerOrReadOnly
+
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie, vary_on_headers
+from .filter import AuctionFilter
 
 from django.contrib.auth import get_user_model
 
@@ -33,6 +38,12 @@ class ListCreateCategory(ListCreateAPIView):
     filter_backends = [SearchFilter]
     search_fields = ['name']
     
+    @method_decorator(cache_page(60 * 60 * 2))
+    @method_decorator(vary_on_cookie)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
+        
     def get_permissions(self):
         if self.request.method == "POST":
             return [IsAdminUser()]
@@ -59,6 +70,7 @@ class ListCreateAuctionListing(ListCreateAPIView):
     filterset_fields = ['seller', 'status', 'category']
     search_fields = ['title', 'description', 'seller__username']
     ordering_fields = ['created_at', 'starting_price']
+    filterset_class = AuctionFilter
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -67,6 +79,12 @@ class ListCreateAuctionListing(ListCreateAPIView):
 
     def get_permissions(self):
         return [IsAuthenticated()] if self.request.method == "POST" else [AllowAny()]
+    
+
+    @method_decorator(cache_page(60 * 60 * 2))
+    @method_decorator(vary_on_cookie)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
         return AuctionListing.objects.select_related("seller", "category")\
@@ -97,6 +115,11 @@ class ListCreateAuctionImage(ListCreateAPIView):
     serializer_class = AuctionImageSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser , JSONParser]
+    
+    @method_decorator(cache_page(60 * 60 * 2))
+    @method_decorator(vary_on_cookie)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         auction = get_object_or_404(AuctionListing, pk=self.kwargs["auction_pk"])
@@ -129,7 +152,13 @@ class ListCreateWatchlist(ListCreateAPIView):
             'auction__seller__username', 'auction__winner__username'
     ]
     ordering_fields = ['added_at','auction__starting_price','auction__bid_increment']
+    filterset_class = AuctionFilter
 
+    @method_decorator(cache_page(60 * 60 * 2))
+    @method_decorator(vary_on_cookie)
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+    
     def get_queryset(self):
         return (
             Watchlist.objects

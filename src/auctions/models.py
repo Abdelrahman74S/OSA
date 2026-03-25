@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import uuid
+from celery import shared_task
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -100,6 +101,27 @@ class AuctionListing(models.Model):
             models.Index(fields=['start_time', 'end_time']),
         ]
         
+    @shared_task
+    def close_expired_auctions():
+        from bids.models import Bid
+        expired_auctions = AuctionListing.objects.filter(
+            status=AuctionListing.Status.ACTIVE,
+            end_time__lte=timezone.now()
+        )
+    
+        for auction in expired_auctions:
+            highest_bid = (
+                Bid.objects.filter(auction=auction, is_valid=True)
+                .order_by('-amount')
+                .first()
+            )
+    
+            if highest_bid:
+                auction.winner = highest_bid.bidder
+    
+            auction.status = AuctionListing.Status.ENDED
+            auction.save()
+
     def clean(self):
         if self.current_price < self.starting_price:
             raise ValidationError("Current price must be >= starting price.")
