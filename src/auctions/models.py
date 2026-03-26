@@ -100,27 +100,6 @@ class AuctionListing(models.Model):
             models.Index(fields=['category']),              
             models.Index(fields=['start_time', 'end_time']),
         ]
-        
-    @shared_task
-    def close_expired_auctions():
-        from bids.models import Bid
-        expired_auctions = AuctionListing.objects.filter(
-            status=AuctionListing.Status.ACTIVE,
-            end_time__lte=timezone.now()
-        )
-    
-        for auction in expired_auctions:
-            highest_bid = (
-                Bid.objects.filter(auction=auction, is_valid=True)
-                .order_by('-amount')
-                .first()
-            )
-    
-            if highest_bid:
-                auction.winner = highest_bid.bidder
-    
-            auction.status = AuctionListing.Status.ENDED
-            auction.save()
 
     def clean(self):
         if self.current_price < self.starting_price:
@@ -132,6 +111,13 @@ class AuctionListing(models.Model):
         
     def __str__(self):
         return self.title
+    
+    @property
+    def highest_bidder(self):
+        highest_bid = self.bids.order_by('-amount').first()
+        if highest_bid:
+            return highest_bid.bidder
+        return None
 
     @property
     def is_active(self):
