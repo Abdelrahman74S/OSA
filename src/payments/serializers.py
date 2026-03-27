@@ -11,8 +11,9 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = [
-            'id', 'auction', 'buyer', 'seller', 'final_price',
-            'platform_fee', 'seller_earnings', 'status',
+            'id', 'auction', 'buyer', 'seller', 
+            'buyer_details', 'seller_details', 'auction_details', # 
+            'final_price', 'platform_fee', 'seller_earnings', 'status',
             'paid_at', 'shipped_at', 'delivered_at',
             'tracking_number', 'created_at'
         ]
