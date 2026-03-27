@@ -55,14 +55,6 @@ class Bid(models.Model):
         if errors:
             raise ValidationError(errors)
 
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
-
-        if self.is_valid:
-            AuctionListing.objects.filter(pk=self.auction_id).update(
-                current_price=self.amount
-            )
 
     def __str__(self):
         return f"{self.bidder} → {self.auction} @ {self.amount}"

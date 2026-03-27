@@ -42,10 +42,11 @@ class AuctionImageSerializer(serializers.ModelSerializer):
 
 class AuctionListSerializer(serializers.ModelSerializer):
     primary_image = serializers.SerializerMethodField()
-
+    highest_bidder = serializers.CharField(source='highest_bidder_username', read_only=True,allow_null=True)
+    
     class Meta:
         model = AuctionListing
-        fields = ['id', 'title', 'current_price', 'status', 'end_time', 'primary_image']
+        fields = ['id', 'title', 'current_price', 'highest_bidder', 'status', 'end_time', 'primary_image']
 
     def get_primary_image(self, obj):
         img = obj.images.filter(is_primary=True).first() or obj.images.first()

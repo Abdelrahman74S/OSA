@@ -22,7 +22,7 @@ def place_bid_service(auction_id, user, amount):
                 highest_bid = Bid.objects.filter(auction=auction, is_valid=True).order_by('-amount').first()
                 if highest_bid:
                     auction.winner = highest_bid.bidder
-                    auction.status = AuctionListing.Status.COMPLETED
+                    auction.status = AuctionListing.Status.ENDED
                     auction.save()
             raise ValidationError({"auction": "Auction has ended. No more bids allowed."})
     

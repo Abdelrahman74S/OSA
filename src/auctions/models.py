@@ -112,12 +112,6 @@ class AuctionListing(models.Model):
     def __str__(self):
         return self.title
     
-    @property
-    def highest_bidder(self):
-        highest_bid = self.bids.order_by('-amount').first()
-        if highest_bid:
-            return highest_bid.bidder
-        return None
 
     @property
     def is_active(self):
