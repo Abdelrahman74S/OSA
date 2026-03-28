@@ -38,7 +38,24 @@ class AuctionImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuctionImage
         fields = ['id', 'image', 'is_primary', 'order']
-
+        
+    def create(self, validated_data):
+        auction = validated_data.get('auction')
+        is_primary = validated_data.get('is_primary', False)
+        
+        if is_primary and auction:
+            AuctionImage.objects.filter(auction=auction, is_primary=True).update(is_primary=False)
+            
+        return super().create(validated_data)
+        
+    def update(self, instance, validated_data):
+        is_primary = validated_data.get('is_primary', instance.is_primary)
+        
+        if is_primary and not instance.is_primary:
+            AuctionImage.objects.filter(auction=instance.auction, is_primary=True).update(is_primary=False)
+            
+        return super().update(instance, validated_data)
+    
 
 class AuctionListSerializer(serializers.ModelSerializer):
     primary_image = serializers.SerializerMethodField()
@@ -49,11 +66,15 @@ class AuctionListSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'current_price', 'highest_bidder', 'status', 'end_time', 'primary_image']
 
     def get_primary_image(self, obj):
-        img = obj.images.filter(is_primary=True).first() or obj.images.first()
-        if img:
-            return self.context['request'].build_absolute_uri(img.image.url)
-        return None
-
+            images = obj.images.all() 
+            
+            img = next((i for i in images if i.is_primary), None)
+            if not img and images:
+                img = images[0]
+                
+            if img:
+                return self.context['request'].build_absolute_uri(img.image.url)
+            return None
 
 class AuctionDetailSerializer(serializers.ModelSerializer):
     images = AuctionImageSerializer(many=True, read_only=True)
