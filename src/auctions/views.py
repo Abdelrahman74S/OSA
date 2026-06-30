@@ -205,9 +205,7 @@ class ListCreateAuctionImage(ListCreateAPIView):
         if auction.seller != self.request.user:
             raise PermissionDenied("Only the seller can add pictures.")
         
-        instance = serializer.save(auction=auction)
-        cache.delete(get_auction_images_cache_key(auction.id))
-        return instance
+        return serializer.save(auction=auction)
 
 
 class RetrieveUpdateDestroyAuctionImage(RetrieveUpdateDestroyAPIView):
@@ -221,14 +219,10 @@ class RetrieveUpdateDestroyAuctionImage(RetrieveUpdateDestroyAPIView):
         ).select_related('auction')
 
     def perform_update(self, serializer):
-        instance = serializer.save()
-        cache.delete(get_auction_images_cache_key(instance.auction.id))
-        return instance
+        return serializer.save()
 
     def perform_destroy(self, instance):
-        auction_id = instance.auction.id
         instance.delete()
-        cache.delete(get_auction_images_cache_key(auction_id))
 
 
 # ══════════════════════════════════════════
@@ -270,9 +264,7 @@ class ListCreateWatchlist(ListCreateAPIView):
         return response
 
     def perform_create(self, serializer):
-        instance = serializer.save(user=self.request.user)
-        cache.delete(get_watchlist_cache_key(self.request.user.id))
-        return instance
+        return serializer.save(user=self.request.user)
 
 
 class DestroyWatchlist(DestroyAPIView):
@@ -286,6 +278,4 @@ class DestroyWatchlist(DestroyAPIView):
         if instance.user != self.request.user:
             raise PermissionDenied("You cannot remove items from another user's watchlist.")
         
-        user_id = instance.user.id
         instance.delete()
-        cache.delete(get_watchlist_cache_key(user_id))

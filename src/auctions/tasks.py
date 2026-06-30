@@ -31,7 +31,7 @@ def close_expired_auctions():
                 if auction.reserve_price is None or highest_bid.amount >= auction.reserve_price:
                     auction.winner = highest_bid.bidder
 
-            auction.status = 'ENDED' #
+            auction.status = 'ENDED' 
             auction.save()
             
     return f"Closed {count} auctions."

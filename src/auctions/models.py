@@ -109,14 +109,15 @@ class AuctionListing(models.Model):
         if self.starting_price <= 0:
             raise ValidationError("Starting price must be positive.")
         
-    def __str__(self):
-        return self.title
     
-
     @property
     def is_active(self):
         return self.status == 'ACTIVE' and self.start_time <= timezone.now() <= self.end_time
 
+    def __str__(self):
+        return self.title
+    
+    
 class AuctionImage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     auction = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name='images')

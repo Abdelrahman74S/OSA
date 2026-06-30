@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from .models import User
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+
 
 class Userserializers(serializers.ModelSerializer):
     class Meta:
@@ -21,9 +23,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
-        
-        from django.contrib.auth.password_validation import validate_password
-        from django.core.exceptions import ValidationError as DjangoValidationError
+
         try:
             validate_password(data['password'], user=None)
         except DjangoValidationError as e:

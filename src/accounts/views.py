@@ -8,7 +8,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny , IsAuthenticated , IsAdminUser
-
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView, Response
@@ -80,7 +80,6 @@ class UserProfileView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg  = 'id'
     
     def get_object(self):
-        from rest_framework.exceptions import PermissionDenied
         user_id = self.kwargs.get('id')
         if not user_id:
             return self.request.user

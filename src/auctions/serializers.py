@@ -122,7 +122,6 @@ class WatchlistSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         auction = data.get('auction')
 
-
         if auction.seller == user:
             raise serializers.ValidationError(
                 {"auction": "You cannot watch your own auction."}
