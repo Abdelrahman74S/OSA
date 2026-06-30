@@ -14,6 +14,8 @@ class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        if getattr(self, "swagger_fake_view", False) or user.is_anonymous:
+            return Transaction.objects.none()
         return Transaction.objects.filter(
             Q(buyer=user) | Q(seller=user)
         ).select_related('auction', 'buyer', 'seller')

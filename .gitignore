@@ -8,3 +8,16 @@ ENV/
 env.bak/
 venv.bak/
 
+.aider*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django
+db.sqlite3
+media/
+static/
+schema.yml

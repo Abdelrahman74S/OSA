@@ -20,6 +20,7 @@ urlpatterns = [
         views.ListCreateWatchlist.as_view(),
         name="watchlist-list-create"
     ),
+    
     path(
         "auctions/watchlist/<uuid:pk>/",
         views.DestroyWatchlist.as_view(),

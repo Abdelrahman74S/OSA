@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     RegisterViews, LoginViews, LogoutView,
     ListUserProfileView, UserProfileView,
-    RequestPasswordReset, ResetPassword, ChangePasswordView
+    RequestPasswordReset, ResetPassword, ChangePasswordView,
+    protected_view
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -12,6 +13,7 @@ urlpatterns = [
     path('auth/login/', LoginViews.as_view(), name='login'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('protected/', protected_view, name='protected'),
 
     # --- Profiles ---
     # List view (Staff sees all, Users see self)

@@ -79,9 +79,7 @@ class ListCreateCategory(ListCreateAPIView):
         return response
 
     def perform_create(self, serializer):
-        instance = serializer.save()
-        cache.delete(get_category_list_cache_key())
-        return instance
+        return serializer.save()
 
 
 class RetrieveUpdateDestroyCategory(RetrieveUpdateDestroyAPIView):
@@ -95,12 +93,9 @@ class RetrieveUpdateDestroyCategory(RetrieveUpdateDestroyAPIView):
         return [AllowAny()]
 
     def perform_update(self, serializer):
-        instance = serializer.save()
-        cache.delete(get_category_list_cache_key())
-        return instance
+        return serializer.save()
 
     def perform_destroy(self, instance):
-        cache.delete(get_category_list_cache_key())
         instance.delete()
 
 
@@ -148,29 +143,13 @@ class ListCreateAuctionListing(ListCreateAPIView):
         return response
 
     def perform_create(self, serializer):
-        instance = serializer.save(
+        return serializer.save(
             seller=self.request.user,
             current_price=serializer.validated_data['starting_price']
         )
-        self._clear_auction_list_cache()
-        return instance
-
-    def _clear_auction_list_cache(self):
-        keys_to_delete = [
-            get_auction_list_cache_key(),
-            get_auction_list_cache_key({'status': 'active'}),
-            get_auction_list_cache_key({'ordering': 'created_at'}),
-        ]
-        for key in keys_to_delete:
-            cache.delete(key)
-        try:
-            cache.delete_pattern("auction_list_*")
-        except AttributeError:
-            pass
 
 
 class RetrieveUpdateDestroyAuctionListing(RetrieveUpdateDestroyAPIView):
-
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH', 'DELETE']: 
             return [IsSellerOrReadOnly()]
@@ -187,13 +166,9 @@ class RetrieveUpdateDestroyAuctionListing(RetrieveUpdateDestroyAPIView):
         ).prefetch_related("images", "bids__bidder")
 
     def perform_update(self, serializer):
-        instance = serializer.save()
-        cache.delete(get_auction_list_cache_key())
-        cache.delete(f"auction_list_{instance.id}")  
-        return instance
+        return serializer.save()
 
     def perform_destroy(self, instance):
-        cache.delete(get_auction_list_cache_key())
         instance.delete()
 
 
@@ -207,6 +182,8 @@ class ListCreateAuctionImage(ListCreateAPIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return AuctionImage.objects.none()
         return AuctionImage.objects.filter(
             auction_id=self.kwargs["auction_pk"]
         ).select_related('auction')
@@ -273,6 +250,8 @@ class ListCreateWatchlist(ListCreateAPIView):
     ordering_fields = ['added_at', 'auction__starting_price', 'auction__bid_increment']
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or self.request.user.is_anonymous:
+            return Watchlist.objects.none()
         return Watchlist.objects.filter(
             user=self.request.user
         ).select_related(

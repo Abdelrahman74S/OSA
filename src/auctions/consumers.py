@@ -48,22 +48,25 @@ class AuctionConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def place_bid(self, user, amount):
+        from bids.services import place_bid_service
+        from django.core.exceptions import ValidationError
+        from decimal import Decimal, InvalidOperation
+
         try:
-            with transaction.atomic():
-                auction = AuctionListing.objects.select_for_update().get(id=self.auction_id)
-                try:
-                    amount = float(amount)
-                except (TypeError, ValueError):
-                    return {"error": "Invalid bid amount"}
-        
-                current = auction.current_price if auction.current_price is not None else auction.starting_price
-                if amount <= current:
-                    return {"error": "Bid must be higher than the current price"}
-        
-                Bid.objects.create(auction=auction, bidder=user, amount=amount)
-                auction.current_price = amount
-                auction.save()
-            return {"amount": amount}
-    
-        except AuctionListing.DoesNotExist:
-            return {"error": "Auction does not exist"}
+            try:
+                decimal_amount = Decimal(str(amount))
+            except (TypeError, ValueError, InvalidOperation):
+                return {"error": "Invalid bid amount."}
+
+            bid = place_bid_service(self.auction_id, user, decimal_amount)
+            return {"amount": float(bid.amount)}
+        except ValidationError as e:
+            if hasattr(e, 'message_dict'):
+                msg = ", ".join([f"{k}: {v[0] if isinstance(v, list) else v}" for k, v in e.message_dict.items()])
+            elif hasattr(e, 'messages'):
+                msg = ", ".join(e.messages)
+            else:
+                msg = str(e)
+            return {"error": msg}
+        except Exception as e:
+            return {"error": str(e)}

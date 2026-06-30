@@ -12,6 +12,8 @@ def close_expired_auctions():
         status='ACTIVE', 
         end_time__lte=now
     )
+    
+    count = expired_auctions.count()
 
     for auction in expired_auctions:
         with transaction.atomic():
@@ -32,4 +34,4 @@ def close_expired_auctions():
             auction.status = 'ENDED' #
             auction.save()
             
-    return f"Closed {expired_auctions.count()} auctions."
+    return f"Closed {count} auctions."

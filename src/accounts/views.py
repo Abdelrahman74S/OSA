@@ -19,6 +19,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth import get_user_model
+from rest_framework.decorators import api_view, permission_classes
 
 User = get_user_model()
 
@@ -76,13 +77,18 @@ class ListUserProfileView(ListAPIView):
 class UserProfileView(RetrieveUpdateDestroyAPIView):
     serializer_class = Userserializers
     permission_classes = [IsAuthenticated]
-    lookup_url_kwarg  = 'id' # Erorr
+    lookup_url_kwarg  = 'id'
     
     def get_object(self):
+        from rest_framework.exceptions import PermissionDenied
         user_id = self.kwargs.get('id')
-        if user_id and self.request.user.is_staff:
+        if not user_id:
+            return self.request.user
+        if self.request.user.is_staff:
             return get_object_or_404(User, pk=user_id)
-        return self.request.user
+        if str(self.request.user.pk) == str(user_id):
+            return self.request.user
+        raise PermissionDenied("You do not have permission to access this profile.")
 
 class RequestPasswordReset(GenericAPIView):
     serializer_class = ResetPasswordRequestSerializer
@@ -162,3 +168,9 @@ class ChangePasswordView(GenericAPIView):
         user.save(update_fields=["password"])
 
         return Response({"success": "Password updated successfully"}, status=status.HTTP_200_OK)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def protected_view(request):
+    return Response({"message": "You are authenticated"})

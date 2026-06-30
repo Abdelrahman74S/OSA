@@ -29,6 +29,8 @@ class ListCreateBid(ListCreateAPIView):
         return [AllowAny()]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or "auction_pk" not in self.kwargs:
+            return Bid.objects.none()
         return (
             Bid.objects
             .filter(auction_id=self.kwargs["auction_pk"], is_valid=True)
@@ -55,6 +57,8 @@ class RetrieveBid(RetrieveAPIView):
     permission_classes = [AllowAny]
     
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or "auction_pk" not in self.kwargs:
+            return Bid.objects.none()
         return Bid.objects.filter(
             auction_id=self.kwargs["auction_pk"]
         ).select_related("bidder", "auction")

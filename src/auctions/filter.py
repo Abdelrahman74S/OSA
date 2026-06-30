@@ -36,4 +36,4 @@ class AuctionFilter(django_filters.FilterSet):
     
     class Meta:
         model = AuctionListing
-        fields = ['category']
+        fields = ['category', 'seller', 'status']
