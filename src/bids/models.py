@@ -59,3 +59,38 @@ class Bid(models.Model):
     def __str__(self):
         return f"{self.bidder} → {self.auction} @ {self.amount}"
 
+class AutoBid(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    auction = models.ForeignKey(
+        'auctions.AuctionListing',
+        on_delete=models.CASCADE,
+        related_name='auto_bids'
+    )
+    bidder = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='bidder_auto_bids'
+    )
+    max_amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        validators=[MinValueValidator(0.00)]
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['bidder']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['bidder', 'auction'], 
+                name='unique_bidder_auction_autobid'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.bidder} → {self.auction} (Max: {self.max_amount})"

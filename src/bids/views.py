@@ -1,12 +1,12 @@
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView , CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError as APIValidationError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from .models import Bid
-from .serializers import BidSerializer
+from .models import Bid , AutoBid
+from .serializers import BidSerializer , AutoBidSerializer
 from .models import AuctionListing
 
 class ListCreateBid(ListCreateAPIView):
@@ -53,6 +53,7 @@ class ListCreateBid(ListCreateAPIView):
 
 
 class RetrieveBid(RetrieveAPIView):
+    queryset = Bid.objects.all()
     serializer_class = BidSerializer
     permission_classes = [AllowAny]
     
@@ -62,3 +63,12 @@ class RetrieveBid(RetrieveAPIView):
         return Bid.objects.filter(
             auction_id=self.kwargs["auction_pk"]
         ).select_related("bidder", "auction")
+
+
+class createAutoBid(CreateAPIView):
+    queryset = AutoBid.objects.all()
+    serializer_class = AutoBidSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(bidder=self.request.user)

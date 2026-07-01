@@ -13,4 +13,10 @@ urlpatterns = [
         views.RetrieveBid.as_view(),
         name="bid-detail"
     ),
+    
+    path(
+        "autobids/",
+        views.createAutoBid.as_view(),
+        name="autobid-create"
+    )
 ]
