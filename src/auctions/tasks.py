@@ -1,7 +1,7 @@
 from celery import shared_task
 from django.utils import timezone
 from .models import AuctionListing
-from bids.models import Bid #
+from bids.models import Bid 
 from django.db import transaction
 
 @shared_task

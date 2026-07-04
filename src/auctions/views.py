@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-from django.core.cache import cache
 from django.contrib.auth import get_user_model
 
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -33,23 +32,7 @@ from django.db.models import Subquery, OuterRef
 User = get_user_model()
 
 
-# ──────────────────────────────────────────
-#  Functions for Cache Keys
-# ──────────────────────────────────────────
-def get_category_list_cache_key():
-    return "category_list_all"
 
-def get_auction_list_cache_key(query_params=None):
-    if query_params:
-        param_str = "_".join([f"{k}_{v}" for k, v in sorted(query_params.items())])
-        return f"auction_list_{param_str}"
-    return "auction_list_all"
-
-def get_auction_images_cache_key(auction_pk):
-    return f"auction_images_{auction_pk}"
-
-def get_watchlist_cache_key(user_id):
-    return f"watchlist_user_{user_id}"
 
 
 # ──────────────────────────────────────────
@@ -66,16 +49,7 @@ class ListCreateCategory(ListCreateAPIView):
             return [IsAdminUser()]
         return [AllowAny()]
 
-    def list(self, request, *args, **kwargs):
-        cache_key = get_category_list_cache_key()
-        cached_data = cache.get(cache_key)
-        
-        if cached_data:
-            return Response(cached_data)
-        
-        response = super().list(request, *args, **kwargs)
-        cache.set(cache_key, response.data, 3600)  
-        return response
+
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -130,16 +104,7 @@ class ListCreateAuctionListing(ListCreateAPIView):
                 highest_bidder_username=Subquery(highest_bidder_subquery)
             )
 
-    def list(self, request, *args, **kwargs):
-        cache_key = get_auction_list_cache_key(request.query_params)
-        cached_data = cache.get(cache_key)
-        
-        if cached_data:
-            return Response(cached_data)
-        
-        response = super().list(request, *args, **kwargs)
-        cache.set(cache_key, response.data, 300)
-        return response
+
 
     def perform_create(self, serializer):
         return serializer.save(
@@ -187,17 +152,7 @@ class ListCreateAuctionImage(ListCreateAPIView):
             auction_id=self.kwargs["auction_pk"]
         ).select_related('auction')
 
-    def list(self, request, *args, **kwargs):
-        auction_pk = self.kwargs["auction_pk"]
-        cache_key = get_auction_images_cache_key(auction_pk)
-        cached_data = cache.get(cache_key)
-        
-        if cached_data:
-            return Response(cached_data)
-        
-        response = super().list(request, *args, **kwargs)
-        cache.set(cache_key, response.data, 600)  
-        return response
+
 
     def perform_create(self, serializer):
         auction = get_object_or_404(AuctionListing, pk=self.kwargs["auction_pk"])
@@ -251,16 +206,7 @@ class ListCreateWatchlist(ListCreateAPIView):
             "auction__seller", "auction__category"
         ).prefetch_related("auction__images")
 
-    def list(self, request, *args, **kwargs):
-        cache_key = get_watchlist_cache_key(request.user.id)
-        cached_data = cache.get(cache_key)
-        
-        if cached_data:
-            return Response(cached_data)
-        
-        response = super().list(request, *args, **kwargs)
-        cache.set(cache_key, response.data, 60)  
-        return response
+
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
